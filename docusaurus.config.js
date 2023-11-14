@@ -7,8 +7,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'AI Engineering Academy',
-  tagline:
-    'Empower Your Learning Odyssey: Where Knowledge Meets Innovation!',
+  tagline: 'Generative AI Mastery: Everything You Need, All in One Place',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -79,19 +78,19 @@ const config = {
           },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
-            "href": "https://courses.aiengineering.academy",
-            "label": "Courses",
-            "position": "left"
-          },
-          {
-            href: 'https://github.com/CognitiveLab-tech',
-            label: 'GitHub',
+            href: 'https://courses.aiengineering.academy',
+            label: 'Courses',
             position: 'right',
           },
+          // {
+          //   href: 'https://github.com/CognitiveLab-tech',
+          //   label: 'GitHub',
+          //   position: 'right',
+          // },
         ],
       },
       footer: {
-        style: 'dark',
+        style: 'light',
         // links: [
         //   {
         //     title: 'Docs',
@@ -133,12 +132,12 @@ const config = {
         //     ],
         //   },
         // ],
-        copyright: `Copyright © ${new Date().getFullYear()} LLM Academy, By CognitiveLab.tech.`,
+        copyright: `Copyright © ${new Date().getFullYear()} AiEngineering.academy, By CognitiveLab.tech.`,
       },
-      prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
+      // prism: {
+      //   theme: lightCodeTheme,
+      //   darkTheme: darkCodeTheme,
+      // },
     }),
 };
 
