@@ -2,6 +2,9 @@
 sidebar_position: 1
 ---
 
-# LLM Academy
+# AI Engineering Academy
 
-Find everything necessary to **learn Generative AI** conveniently in **one location**
+
+
+
+

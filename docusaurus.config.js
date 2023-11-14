@@ -6,9 +6,9 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'LLM Academy',
+  title: 'AI Engineering Academy',
   tagline:
-    'Find everything necessary to learn Generative AI conveniently in one location',
+    'Empower Your Learning Odyssey: Where Knowledge Meets Innovation!',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -20,7 +20,7 @@ const config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'CognitiveLab', // Usually your GitHub org/user name.
-  projectName: 'LLM Academy', // Usually your repo name.
+  projectName: 'AI Engineering Academy', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -65,7 +65,7 @@ const config = {
       // Replace with your project's social card
       image: 'img/LLMAcademy.png',
       navbar: {
-        title: 'LLM Academy',
+        title: 'AI Engineering Academy',
         logo: {
           alt: 'LLM Academy',
           src: 'img/logo.svg',
@@ -78,6 +78,11 @@ const config = {
             label: 'Tutorial',
           },
           { to: '/blog', label: 'Blog', position: 'left' },
+          {
+            "href": "https://courses.aiengineering.academy",
+            "label": "Courses",
+            "position": "left"
+          },
           {
             href: 'https://github.com/CognitiveLab-tech',
             label: 'GitHub',
