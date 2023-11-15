@@ -12,14 +12,14 @@ const courses = [
     imageUrl: 'img/course1.png',
     description:
       'Get started with generative AI and explore its applications in creating new content, from images to text.',
-    link: '/course1',
+    link: 'https://courses.aiengineering.academy/courses/0623338c-2ffe-4a84-965e-50a5e20a9e77/chapters/f7dae533-02d8-4406-96e4-edaa0dcdd19a',
   },
   {
     title: 'Introduction to LLMs',
     imageUrl: 'img/course2.png',
     description:
       'Dive deep into large language models  and learn how to harness their power for various natural language processing tasks.',
-    link: '/course2',
+    link: 'https://courses.aiengineering.academy/courses/801ca512-0928-4309-8c64-551f88ef3b03/chapters/947d7440-71b7-4144-98e1-0fd51a300706',
   },
   {
     title: 'Responsible AI Practices',
@@ -142,7 +142,7 @@ function Home() {
 
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
+      title={``}
       description="Description will go into a meta tag in <head />"
     >
       <header className={clsx('hero hero--primary', styles.heroBanner)}>

@@ -1,4 +1,4 @@
-# Navigating the Marvels of Large Language Models
+# Navigating the Marvels of LLMs
 
 ## Introduction
 
