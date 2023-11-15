@@ -19,7 +19,7 @@ const config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'CognitiveLab', // Usually your GitHub org/user name.
-  projectName: 'AI Engineering Academy', // Usually your repo name.
+  projectName: 'AI Engineering Academy: Learn AI Engineering from the best', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
