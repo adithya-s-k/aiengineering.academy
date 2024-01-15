@@ -1,0 +1,307 @@
+# Quantize to GGUF
+
+A Beginner's Guide to optimise Language Models with GGUF on Google Colab
+
+## Introduction
+
+In the ever-evolving landscape of natural language processing, language models are at the forefront, playing a central role in comprehending and generating human-like text. The increasing complexity and size of these models present a critical challenge: the need for efficiency without compromising performance. As language models continue to advance, striking the right balance becomes essential for their effective deployment across various applications.
+
+This is where quantization steps in as a crucial technique.
+
+## **Need for Quantization**
+
+As neural network models typically operate with 32-bit floating point weights (float32), consuming 4 bytes or 32 bits of memory for each value, quantization becomes a necessity. By reducing this precision through techniques like INT8 quantization, where weights are represented using 8-bit integers instead of the original 32-bit floats, not only does the model size decrease significantly, but computational speed also sees a notable boost. Specialized 8-bit matrix multiplication kernels in modern GPUs and TPUs further optimize the performance of INT8 quantization.
+
+However, the overarching goal remains preserving the original full-precision accuracy as much as possible. It's important to recognize that a simplistic approach to quantization, such as merely rounding weights to lower precision, can pose a substantial threat to model accuracy. Particularly for large language models, sophisticated quantization techniques are imperative. These techniques are meticulously tailored to the unique characteristics of expansive language models, ensuring optimal accuracy while meeting the efficiency demands of diverse applications.
+
+## What is GGUF?
+
+GGUF is a new format introduced by the llama.cpp team on August 21st 2023. It is a replacement for GGML, which is no longer supported by llama.cpp.
+
+Here is an incomplete list of clients and libraries that are known to support GGUF:
+
+- **[llama.cpp](https://github.com/ggerganov/llama.cpp)**. The source project for GGUF. Offers a CLI and a server option.
+- **[text-generation-webui](https://github.com/oobabooga/text-generation-webui)**, the most widely used web UI, with many features and powerful extensions. Supports GPU acceleration.
+- **[KoboldCpp](https://github.com/LostRuins/koboldcpp)**, a fully featured web UI, with GPU accel across all platforms and GPU architectures. Especially good for story telling.
+- **[GPT4All](https://gpt4all.io/index.html)**, a free and open source local running GUI, supporting Windows, Linux and macOS with full GPU accel.
+- **[LM Studio](https://lmstudio.ai/)**, an easy-to-use and powerful local GUI for Windows and macOS (Silicon), with GPU acceleration. Linux available, in beta as of 27/11/2023.
+- **[LoLLMS Web UI](https://github.com/ParisNeo/lollms-webui)**, a great web UI with many interesting and unique features, including a full model library for easy model selection.
+- **[Faraday.dev](https://faraday.dev/)**, an attractive and easy to use character-based chat GUI for Windows and macOS (both Silicon and Intel), with GPU acceleration.
+- **[llama-cpp-python](https://github.com/abetlen/llama-cpp-python)**, a Python library with GPU accel, LangChain support, and OpenAI-compatible API server.
+- **[candle](https://github.com/huggingface/candle)**, a Rust ML framework with a focus on performance, including GPU support, and ease of use.
+- **[ctransformers](https://github.com/marella/ctransformers)**, a Python library with GPU accel, LangChain support, and OpenAI-compatible AI server. Note, as of time of writing (November 27th 2023), ctransformers has not been updated in a long time and does not support many recent models.
+
+**Key Features:**
+
+1. **Smart Encoding:** GGUF efficiently encodes model components, ensuring a streamlined representation of weights, biases, and architecture details.
+2. **Compact Storage:** Utilizing compression techniques, GGUF minimizes the model's size for optimal storage and faster loading times.
+3. **Informative Metadata:** GGUF includes metadata for essential model insights, such as GPT version and training parameters.
+4. **Versatility:** Designed for compatibility beyond llama.cpp, GGUF is extensible to various model architectures.
+5. **Efficient Inference:** GGUF enables quick retrieval of parameters, ensuring swift and accurate model predictions.
+6. **Community-Driven Improvement:** Open to contributions, GGUF thrives on community feedback for ongoing enhancements.
+
+In essence, GGUF serves as a unified and efficient solution for storing and deploying language models , marking a noteworthy advancement in the landscape of language model file formats.
+
+### Various types of quantization:
+
+Let’s look at the files inside of [TheBloke/Llama-2–13B-chat-GGML](https://huggingface.co/TheBloke/Llama-2-13B-chat-GGML/tree/main) repo. We can see **14 different GGML models**, corresponding to different types of quantization. They follow a particular naming convention: “q” + the number of bits used to store the weights (precision) + a particular variant. Here is a list of all the possible quant methods and their corresponding use cases, based on model cards made by TheBloke:
+
+- `q2_k`: Uses Q4_K for the attention.vw and feed_forward.w2 tensors, Q2_K for the other tensors.
+- `q3_k_l`: Uses Q5_K for the attention.wv, attention.wo, and feed_forward.w2 tensors, else Q3_K
+- `q3_k_m`: Uses Q4_K for the attention.wv, attention.wo, and feed_forward.w2 tensors, else Q3_K
+- `q3_k_s`: Uses Q3_K for all tensors
+- `q4_0`: Original quant method, 4-bit.
+- `q4_1`: Higher accuracy than q4_0 but not as high as q5_0. However has quicker inference than q5 models.
+- `q4_k_m`: Uses Q6_K for half of the attention.wv and feed_forward.w2 tensors, else Q4_K
+- `q4_k_s`: Uses Q4_K for all tensors
+- `q5_0`: Higher accuracy, higher resource usage and slower inference.
+- `q5_1`: Even higher accuracy, resource usage and slower inference.
+- `q5_k_m`: Uses Q6_K for half of the attention.wv and feed_forward.w2 tensors, else Q5_K
+- `q5_k_s`: Uses Q5_K for all tensors
+- `q6_k`: Uses Q8_K for all tensors
+- `q8_0`: Almost indistinguishable from float16. High resource use and slow. Not recommended for most users.
+
+## Try it yourself!!
+
+https://colab.research.google.com/github/adithya-s-k/LLM-Alchemy-Chamber/blob/main/Quantization/GGUF_Quantization.ipynb#scrollTo=blDPgnok_2WP
+
+This notebook is crafted for the purpose of quantizing Hugging Face models into GGUF format and subsequently uploading them to the Hub. Let's now go through a sample code snippet illustrating the quantization of a pretrained large language model.
+
+## Code Walkthrough
+
+### Step 01: **Install Hugging Face Hub**
+
+```python
+!pip install huggingface_hub
+from huggingface_hub import notebook_login
+notebook_login()
+```
+
+- This installs the **`huggingface_hub`** Python package, which is used for version control and collaboration on models and logs into the Hugging Face Hub using the **`notebook_login`** function. This step is necessary for accessing models from the Hugging Face Hub.
+
+### Step 02: **Download the base model from HuggingFace**
+
+```python
+from huggingface_hub import snapshot_download
+model_id = "meta-llama/Llama-2-7b-hf" # @param {type:"string"}
+local_directory = model_id.split("/")[-1]
+snapshot_download(repo_id=model_id,
+                  local_dir=local_directory,
+                  local_dir_use_symlinks=False,
+                  revision="main")
+```
+
+- This downloads the specific model snapshot from the Hugging Face Hub. The **`model_id`** variable represents the ID of the model to be downloaded, and the **`snapshot_download`** function is used for downloading the model to a local directory.
+
+### Step 03: I**nstalling Llama.cpp Dependencies**
+
+```python
+# @title Installing Llama.cpp
+!apt update -y
+!apt install build-essential git cmake libopenblas-dev libeigen3-dev -y
+
+!git clone https://github.com/ggerganov/llama.cpp
+!pip install -r llama.cpp/requirements.txt
+```
+
+- This section updates the package lists and installs various system dependencies required for the **`llama.cpp`** project. These dependencies include build tools (**`build-essential`**), Git, CMake, OpenBLAS, and Eigen3.
+- It then clones the **`llama.cpp`** GitHub repository to the current working directory.
+- Finally, it installs the Python dependencies required for the Llama.cpp project, as specified in the **`requirements.txt`** file located in the **`llama.cpp`** directory.
+
+The above code sets up the environment for using the Llama.cpp project by downloading a specific model snapshot, installing system dependencies, cloning the Llama.cpp repository, and installing Python dependencies.
+
+### Step 04: **Quantisation**
+
+```python
+# @title Choose Quantisation Type. { display-mode: "form" }
+
+# @markdown ### Enter your model and and Huggingface account:
+MODEL_NAME = 'quantizeModelName'  # @param {type: "string"}
+
+# @markdown ### Choose Quantisation Formats:
+q2_k = False # @param {type:"boolean"}
+q3_k_l = False # @param {type:"boolean"}
+q3_k_m = False # @param {type:"boolean"}
+q3_k_s = False # @param {type:"boolean"}
+q4_0 = False # @param {type:"boolean"}
+q4_1 = False # @param {type:"boolean"}
+q4_k_m = True # @param {type:"boolean"}
+q4_k_s = False # @param {type:"boolean"}
+q5_0 = False # @param {type:"boolean"}
+q5_1 = False # @param {type:"boolean"}
+q5_k_m = True # @param {type:"boolean"}
+q5_k_s = False # @param {type:"boolean"}
+q6_k = False # @param {type:"boolean"}
+q8_0 = False # @param {type:"boolean"}
+
+import os
+
+# Check if the directory exists
+if not os.path.exists(MODEL_NAME):
+    # If it doesn't exist, create it
+    os.mkdir(MODEL_NAME)
+else:
+    print(f"The directory {MODEL_NAME} already exists.")
+```
+
+This code snippet creates an interactive form for users to input a model name, choose quantization formats, and then creates a directory based on the provided model name (if it doesn't already exist).
+
+- Enter your model name and HuggingFace account information.
+- Once entered, select the desired quantization format.
+
+### Step 05:  Load in 16 bit precission:
+
+```python
+# @title Load in 16bit Precision
+fp16 = f"{MODEL_NAME}/{MODEL_NAME.lower()}.fp16.bin"
+!python llama.cpp/convert.py {local_directory} --outtype f16 --outfile {fp16}
+!cd llama.cpp && make LLAMA_OPENBLAS=1
+```
+
+- This snippet constructs the file path (**`fp16`**) for the 16-bit precision version of the model. It uses the provided **`MODEL_NAME`** and converts it to lowercase for creating the filename.
+- It then executes the Llama.cpp conversion script (**`convert.py`**). It takes the input model located in the **`local_directory`**, specifies the output type as 16-bit floating-point (**`f16`**), and sets the output file path to the previously constructed **`fp16`**.
+- Finally, it changes the working directory to **`llama.cpp`** and then compiles the Llama.cpp project using the **`make`** command. It also specifies the **`LLAMA_OPENBLAS=1`** flag, indicating the use of OpenBLAS library during compilation.
+
+### Step 06: Initiate the Quantization Process
+
+```python
+# @title Start Quantisation
+
+QUANTIZATION_METHODS = [
+    ("q2_k", q2_k),
+    ("q3_k_l", q3_k_l),
+    ("q3_k_m", q3_k_m),
+    ("q3_k_s", q3_k_s),
+    ("q4_0", q4_0),
+    ("q4_1", q4_1),
+    ("q4_k_m", q4_k_m),
+    ("q4_k_s", q4_k_s),
+    ("q5_0", q5_0),
+    ("q5_1", q5_1),
+    ("q5_k_m", q5_k_m),
+    ("q5_k_s", q5_k_s),
+    ("q6_k", q6_k),
+    ("q8_0", q8_0),
+]
+
+for method, flag in QUANTIZATION_METHODS:
+    if flag:
+        qtype = f"{MODEL_NAME}/{MODEL_NAME.lower()}.{method.upper()}.gguf"
+        !./llama.cpp/quantize {fp16} {qtype} {method}
+```
+
+- This section defines a list of tuples, where each tuple contains the method name and its corresponding boolean flag indicating whether the user has selected that quantization method.
+- The code then iterates over each quantization method. If the corresponding flag is set to **`True`**, it constructs the output file path (**`qtype`**) and executes the Llama.cpp quantization script (**`quantize`**). The script takes the 16-bit precision model file (**`fp16`**), the output file path, and the method name as arguments.
+
+### Step 07: **Inference using LLama.cpp**
+
+```python
+import os
+
+model_list = [file for file in os.listdir(MODEL_NAME) if "gguf" in file]
+
+prompt = input("Enter your prompt: ")
+chosen_method = input("Name of the model (options: " + ", ".join(model_list) + "): ")
+
+# Verify the chosen method is in the list
+if chosen_method not in model_list:
+    print("Invalid name")
+else:
+    qtype = f"{MODEL_NAME}/{chosen_method}"
+    !./llama.cpp/main -m {qtype} -n 128 --color -ngl 35 -p "{prompt}"
+```
+
+- The following code generates a list of quantized model files in the specified directory (**`MODEL_NAME`**). It filters files that contain "gguf" in their names, suggesting they are quantized models.
+- The user is alerted to enter a text prompt and the name of the quantized model they want to use. The available model options are displayed based on the contents of the **`model_list`**.
+- The conditional statement checks if the chosen model name is in the list of available quantized models. If not, it prints an error message. Otherwise, it continues with the image generation.
+- If the chosen model is valid, the code constructs the full path to the selected quantized model (**`qtype`**) and runs the Llama.cpp main script with specified parameters. It generates an image based on the provided prompt, model, and other settings.
+
+### Step 08: I**nference using ctransformers**
+
+```python
+!pip install ctransformers>=0.2.24
+```
+
+- This line installs the **`ctransformers`** library, ensuring that the version is greater than or equal to 0.2.24.
+
+```python
+from ctransformers import AutoModelForCausalLM
+import os
+model_list = [file for file in os.listdir(MODEL_NAME) if "gguf" in file]
+prompt = input("Enter your prompt: ")
+chosen_method = input("Name of the model (options: " + ", ".join(model_list) + "): ")
+
+# Verify the chosen method is in the list
+if chosen_method not in model_list:
+    print("Invalid name")
+else:
+    qtype = f"{MODEL_NAME}/{chosen_method}"
+    llm = AutoModelForCausalLM.from_pretrained(model_path_or_repo_id=qtype, model_type="llama", gpu_layers=0)
+
+for text in llm(prompt, stream=True):
+    print(text, end="", flush=True)
+```
+
+- After importing the necessary libraries, it generates a list of quantized model files in the specified directory (**`MODEL_NAME`**).
+- Then the lines prompt the user to enter a text prompt and the name of the quantized model they want to use. The available model options are displayed based on the contents of the **`model_list`**.
+- The conditional statement checks if the chosen model name is in the list of available quantized models. If not, it prints an error message. Otherwise, it continues with model loading and text generation.
+- If the chosen model is valid, the code constructs the full path to the selected quantized model (**`qtype`**) and loads it using the **`AutoModelForCausalLM`** class. It then generates text based on the provided prompt using the loaded model and prints the text.
+
+### Step 09: Uploading the files to HuggingFace Hub
+
+```python
+username = "username"# @param {type:"string"}
+from huggingface_hub import create_repo, HfApi
+
+api = HfApi()
+
+# Create empty repo
+create_repo(
+    repo_id = f"{username}/{MODEL_NAME}-GGUF",
+    repo_type="model",
+    exist_ok=True,
+)
+
+# Upload gguf files
+api.upload_folder(
+    folder_path=MODEL_NAME,
+    repo_id=f"{username}/{MODEL_NAME}-GGUF",
+    allow_patterns=f"*.gguf",
+)
+```
+
+- The user is prompted to enter his/her Hugging Face username.
+- The necessary libraries are imported including **`create_repo`** and **`HfApi`** from the Hugging Face Hub.
+- The code initializes the Hugging Face Hub API and creates a repository. It uses the **`create_repo`** function to create an empty model repository with the specified ID (**`repo_id`**). The repository ID is constructed using the provided username and the model name (**`MODEL_NAME`**) with the suffix "-GGUF".
+- After creating the repository, the quantized model files are uploaded (with a ".gguf" extension) from the specified folder (**`MODEL_NAME`**). The **`upload_folder`** function is used for this purpose.
+- In summary, it allows the user to input a Hugging Face username, creates a model repository on the Hugging Face Hub, and uploads quantized model files to the repository.
+
+```python
+api.upload_folder(
+    folder_path=local_directory,
+    repo_id=f"{username}/{MODEL_NAME}-GGUF",
+    allow_patterns = "*|!*.bin|!*.safetensors",
+    ignore_patterns="*.bin|*.safetensors"
+)
+```
+
+- This code snippet modifies the file upload process to Hugging Face Hub by allowing specific file patterns and ignoring others. It ensures that files with certain extensions (".bin" and ".safetensors") are excluded during the upload process.
+
+## Conclusion
+
+In the evolving landscape of language processing, the demand for efficient models has never been more crucial. Quantization, plays a pivotal role in achieving this delicate balance between efficiency and accuracy.
+
+With advanced encoding, compact storage, and versatile compatibility, GGUF marks a significant leap in language model file formats. This unified format not only streamlines model representation but also invites community-driven enhancements.
+
+In summary, GGUF empowers the quantization process, offering a streamlined solution for storing and deploying language models. The provided notebook serves as a practical guide for quantizing Hugging Face models into GGUF format, paving the way for efficient model sharing and usage.
+
+In this journey towards a more efficient AI landscape, mastering quantization techniques and embracing innovative formats like GGUF are key steps. Happy quantizing!
+
+> *If you found this post valuable, make sure to follow me for more insightful content. I frequently write about the practical applications of Generative AI, LLMs, Stable Diffusion, and explore the broader impacts of AI on society.*
+> 
+
+> *Let's stay connected on [Twitter](https://twitter.com/adithya_s_k). I'd love to engage in discussions with you.*
+> 
+
+> *If you're not a Medium member yet and wish to support writers like me, consider signing up through my referral link: [Medium Membership](https://adithyask.medium.com/membership). Your support is greatly appreciated!*
+> 
